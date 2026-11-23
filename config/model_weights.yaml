@@ -1,0 +1,26 @@
+# Versioned model parameters. ILLUSTRATIVE VALUES — not production parameters.
+#
+# Router models are keyed by router_model_version so that any recorded SOR
+# decision can be re-scored with the exact weights it was made with.
+# All cost-type inputs (bps) are divided by their scale before weighting so that
+# every term in the utility is dimensionless and of comparable magnitude.
+router_models:
+  "1.3":
+    weights: {fill: 0.30, liquidity: 0.20, price: 0.20, adverse: 0.10, impact: 0.10, cost: 0.10}
+    scales_bps: {adverse_selection: 5.0, market_impact: 5.0, transaction_cost: 5.0}
+    tie_break: venue_id_ascending
+  "1.4":
+    weights: {fill: 0.25, liquidity: 0.20, price: 0.20, adverse: 0.15, impact: 0.10, cost: 0.10}
+    scales_bps: {adverse_selection: 5.0, market_impact: 5.0, transaction_cost: 5.0}
+    tie_break: venue_id_ascending
+
+# Venue intelligence composite (spec §9.1).
+#   I = alpha*C + beta*P + gamma*LL     (structural influence; explanatory only)
+#   R = w1*AS + w2*MI + w3*T + w4*D     (venue risk; influence deliberately absent)
+venue_intelligence:
+  "1.0":
+    influence: {alpha: 0.5, beta: 0.25, gamma: 0.25}
+    risk: {adverse_selection: 0.40, market_impact: 0.30, latency: 0.15, data_quality: 0.15}
+    # Component scales used to map raw measurements onto [0, 1].
+    scales: {adverse_selection_bps: 5.0, market_impact_bps: 5.0, latency_ms: 50.0}
+    confidence_prior_fills: 50

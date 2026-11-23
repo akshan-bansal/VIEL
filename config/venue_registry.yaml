@@ -1,0 +1,119 @@
+# Controlled venue reference data (Contract B), registry version 2.0.
+#
+# ALL IDENTIFIERS IN THIS FILE ARE ILLUSTRATIVE. They describe the synthetic
+# venues used by the replay/simulation scenario and must not be read as
+# statements about any real market or MIC.
+#
+# Each record is immutable. A change is made by proposing a change request
+# (identity/mapping_history.py) that is approved by a different principal; the
+# approved change creates a new registry version that supersedes records rather
+# than editing them, so any historical version can be replayed exactly.
+#
+# Time axes (bitemporal):
+#   valid_from / valid_to  -> business time: when the alias meant this venue
+#   registry version       -> system time: when the audit learned about it
+registry_version: "2.0"
+registry_created_at: "2026-10-01T00:00:00Z"
+approved_by: REFERENCE_DATA_CONTROL
+
+records:
+  - venue_id: VENUE_A
+    mic: XVNA
+    operating_mic: XVNA
+    raw_aliases: ["VNA"]
+    venue_name: Example Lit Exchange A
+    venue_type: EXCHANGE
+    country: CA
+    valid_from: "2026-01-01T00:00:00Z"
+    valid_to: null
+    status: ACTIVE
+
+  - venue_id: VENUE_B
+    mic: XVNB
+    operating_mic: XVNB
+    raw_aliases: ["VNB"]
+    broker_aliases:
+      BROKER_B: ["B_ROUTE_7"]
+    venue_name: Example Lit Exchange B
+    venue_type: EXCHANGE
+    country: CA
+    valid_from: "2026-07-01T00:00:00Z"
+    valid_to: null
+    status: ACTIVE
+
+  # Historical alias: "VNB_OLD" referred to VENUE_B only during H1 2026.
+  - venue_id: VENUE_B
+    mic: XVNB
+    operating_mic: XVNB
+    raw_aliases: ["VNB", "VNB_OLD"]
+    venue_name: Example Lit Exchange B
+    venue_type: EXCHANGE
+    country: CA
+    valid_from: "2026-01-01T00:00:00Z"
+    valid_to: "2026-07-01T00:00:00Z"
+    status: ACTIVE
+
+  - venue_id: VENUE_C
+    mic: XABC
+    operating_mic: XABC
+    raw_aliases: ["ABC"]
+    venue_name: Example Execution Venue
+    venue_type: EXCHANGE
+    country: CA
+    valid_from: "2026-01-01T00:00:00Z"
+    valid_to: null
+    status: ACTIVE
+
+  - venue_id: VENUE_D
+    mic: XVND
+    operating_mic: XVND
+    raw_aliases: ["VND", "DARK_D"]
+    venue_name: Example Alternative Trading System D
+    venue_type: ATS
+    country: CA
+    valid_from: "2026-01-01T00:00:00Z"
+    valid_to: null
+    status: ACTIVE
+
+  # Known reference-data defect carried in v2.0 for the audit scenario:
+  # BROKER_B's "SMART" destination was registered against two venues.
+  # Resolution must return AMBIGUOUS, never pick one.
+  - venue_id: VENUE_A
+    mic: XVNA
+    operating_mic: XVNA
+    raw_aliases: []
+    broker_aliases:
+      BROKER_B: ["SMART"]
+    venue_name: Example Lit Exchange A
+    venue_type: EXCHANGE
+    country: CA
+    valid_from: "2026-01-01T00:00:00Z"
+    valid_to: null
+    status: ACTIVE
+
+  - venue_id: VENUE_D
+    mic: XVND
+    operating_mic: XVND
+    raw_aliases: []
+    broker_aliases:
+      BROKER_B: ["SMART"]
+    venue_name: Example Alternative Trading System D
+    venue_type: ATS
+    country: CA
+    valid_from: "2026-01-01T00:00:00Z"
+    valid_to: null
+    status: ACTIVE
+
+  # Stale reference data carried in v2.0: VENUE_X's MIC is EXPIRED in the
+  # authoritative ISO 10383 snapshot, but the registry still says ACTIVE.
+  # Resolution must return INVALID, never VENUE_X.
+  - venue_id: VENUE_X
+    mic: XVNX
+    operating_mic: XVNX
+    raw_aliases: []
+    venue_name: Example Delisted Venue X
+    venue_type: EXCHANGE
+    country: CA
+    valid_from: "2026-01-01T00:00:00Z"
+    valid_to: null
+    status: ACTIVE

@@ -1,0 +1,40 @@
+# Alert rules for spec §13.2. Alerts notify operations; they never touch live orders.
+groups:
+  - name: venue-integrity
+    rules:
+      - alert: VENUE_001_UnknownVenueIdentifier
+        expr: sum(via_unresolved_exceptions{exception_type=~"UNKNOWN_DESTINATION|AMBIGUOUS_VENUE|INVALID_VENUE|UNRESOLVED_EXECUTION_VENUE"}) > 0
+        labels: {severity: high, code: VENUE-001}
+        annotations: {summary: "Unknown venue identifier", response: "Create reference-data incident"}
+      - alert: VENUE_002_MarketOrderBecomesLegacy
+        expr: sum(via_unresolved_exceptions{exception_type="MARKET_ORDER_LEGACY_CLASSIFICATION"}) > 0 or via_silent_coercions > 0
+        labels: {severity: critical, code: VENUE-002}
+        annotations: {summary: "Market order classified LEGACY / silent coercion", response: "Critical classification incident"}
+      - alert: VENUE_003_DuplicateExecution
+        expr: sum(via_unresolved_exceptions{exception_type=~"DUPLICATE_EXEC_ID|CONFLICTING_EXEC_ID"}) > 0
+        labels: {severity: critical, code: VENUE-003}
+        annotations: {summary: "Duplicate execution", response: "Stop duplicate economic inclusion"}
+      - alert: VENUE_004_DestinationMismatch
+        expr: sum(via_unresolved_exceptions{exception_type="DESTINATION_MISMATCH"}) > 0
+        labels: {severity: medium, code: VENUE-004}
+        annotations: {summary: "Execution destination mismatch", response: "Investigate routing lineage"}
+      - alert: VENUE_005_GraphTcaDivergence
+        expr: sum(via_unresolved_exceptions{exception_type=~"GRAPH_TCA_DIVERGENCE|ROUTER_FEATURE_DIVERGENCE"}) > 0
+        labels: {severity: medium, code: VENUE-005}
+        annotations: {summary: "Graph/TCA divergence", response: "Quantitative investigation"}
+      - alert: VENUE_006_SorFeatureMissing
+        expr: sum(via_unresolved_exceptions{exception_type="MISSING_MODEL_FEATURE"}) > 0
+        labels: {severity: high, code: VENUE-006}
+        annotations: {summary: "SOR feature missing", response: "Apply approved safe fallback"}
+      - alert: VENUE_007_MappingVersionChanged
+        expr: changes(via_registry_version_info[10m]) > 0
+        labels: {severity: info, code: VENUE-007}
+        annotations: {summary: "Mapping version changed", response: "Revalidate and retain audit trail"}
+      - alert: VENUE_008_SequenceGap
+        expr: via_sequence_gaps_open > 0
+        labels: {severity: high, code: VENUE-008}
+        annotations: {summary: "Data-feed sequence gap", response: "Recover and reconcile session"}
+      - alert: VIA_SilentVenueFallback
+        expr: via_silent_venue_fallbacks > 0
+        labels: {severity: critical}
+        annotations: {summary: "Execution venue populated without LastMkt (required control: 0)"}

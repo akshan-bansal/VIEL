@@ -1,0 +1,70 @@
+# Venue Integrity Audit — runtime settings. Values are proposed initial
+# thresholds (spec §12), not externally mandated limits.
+
+# The only supported modes. There is no live mode: the audit never connects to an
+# order-routing session and never issues trading instructions.
+mode: replay            # replay | simulation
+
+ingestion:
+  schema_version: "1.0"
+  parser_version: "1.0.0"
+  clock_drift_tolerance_ms: 2000        # |received_at - SendingTime| beyond this -> CLOCK_DRIFT
+  future_timestamp_tolerance_ms: 500    # source timestamp later than receipt -> CLOCK_DRIFT
+
+identity:
+  # LastMkt (30) is resolved as a MIC first. If no MIC matches, attempt an
+  # explicitly registered alias for the same broker. Every attempt is recorded.
+  lastmkt_alias_resolution: true
+
+reconciliation:
+  # ExecID uniqueness scope. FIX ExecIDs are unique per sender, not globally.
+  exec_id_scope: source_system
+
+tca:
+  horizons_ms: [100, 500, 1000, 5000, 30000]
+  reference_horizon_ms: 1000
+  max_midpoint_staleness_ms: 1000
+  # Taker fees in bps of notional (illustrative).
+  fee_schedule_bps:
+    VENUE_A: 0.30
+    VENUE_B: 0.25
+    VENUE_C: 0.35
+    VENUE_D: 0.10
+
+graph:
+  max_lag: 3                 # in grid ticks
+  significance: 0.01         # family-wise (Bonferroni across ordered venue pairs)
+  min_observations: 500
+  min_net_lead: 0.05         # effect-size floor on rho_ij - rho_ji
+  centrality_method: katz_out_reach
+
+regime:
+  # Session realised volatility percentiles (of the session sample) used for labels.
+  high_volatility_percentile: 75
+  low_volatility_percentile: 25
+
+contamination:
+  baseline_window: 5          # buckets used for the rolling baseline
+  zscore_threshold: 4.0
+  cusum_k: 0.05               # CUSUM slack, in units of the legacy-share
+  cusum_h: 0.25               # CUSUM decision threshold
+
+router:
+  # Hard eligibility constraints applied BEFORE scoring.
+  venue_order_types:
+    VENUE_A: [MARKET, LIMIT, STOP, OTHER]
+    VENUE_B: [MARKET, LIMIT, STOP, OTHER]
+    VENUE_C: [MARKET, LIMIT, OTHER]
+    VENUE_D: [LIMIT]
+  score_tolerance: 1.0e-9
+
+shadow:
+  min_sessions: 20
+  bootstrap_samples: 2000
+  confidence_level: 0.95
+
+# Explicitly governed route categories. A category here is a business tag
+# assigned by a documented rule and stored separately from the order's
+# classification. Nothing in this list can be produced by a failed lookup.
+# The audit scenario defines none; "LEGACY" therefore cannot be produced.
+governed_route_categories: []
